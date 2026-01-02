@@ -38,3 +38,8 @@ build/
 
 ### Firebase ###
 src/main/resources/firebase-service-account.json
+
+# Sensitive files
+firebase-key.txt
+.env
+src/main/resources/firebase-service-account.json
