@@ -1,0 +1,56 @@
+package com.htc.productdevelopment.config;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class CorsFilterConfig implements Filter {
+
+    @Autowired
+    private UrlConfig urlConfig;
+
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+        HttpServletResponse response = (HttpServletResponse) res;
+        HttpServletRequest request = (HttpServletRequest) req;
+        
+        String origin = request.getHeader("Origin");
+        boolean isAllowed = false;
+        
+        // Check if the origin is in the allowed list
+        if (origin != null) {
+            for (String allowedOrigin : urlConfig.getAllowedOrigins()) {
+                if (origin.equals(allowedOrigin)) {
+                    isAllowed = true;
+                    break;
+                }
+            }
+        }
+        
+        if (isAllowed && origin != null) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+        } else {
+            // Default fallback - though this should ideally not happen if configuration is correct
+            response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+        }
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Max-Age", "3600");
+        response.setHeader("Access-Control-Allow-Headers", 
+            "X-Atlassian-Token, Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+        } else {
+            chain.doFilter(req, res);
+        }
+    }
+}
